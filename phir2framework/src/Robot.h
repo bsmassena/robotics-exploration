@@ -66,6 +66,7 @@ protected:
     Timer controlTimer;
     void waitTime(float t);
 
+    double inverseSensorModel(int xCell, int yCell, int xRobot, int yRobot, float robotAngle);
 };
 
 #endif // ROBOT_H

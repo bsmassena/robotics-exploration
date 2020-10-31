@@ -114,7 +114,40 @@ void Planning::updateCellsTypes()
     // c->planType = FRONTIER_NEAR_WALL
 
 
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
 
+            cell->planType = REGULAR;
+
+            if (cell->himm <= 5) {
+                cell->occType = FREE;
+                for (int x = cellX - 3; x <= cellX + 3; x++) {
+                    for (int y = cellY - 3; y <= cellY + 3; y++) {
+                        Cell *adjacentCell = grid->getCell(x, y);
+
+                        if (adjacentCell->occType == OCCUPIED)
+                            cell->planType = DANGER;
+
+                    }
+                }
+            }
+
+            if (cell->himm >= 10) cell->occType = OCCUPIED;
+
+            if (cell->occType == UNEXPLORED) {
+                for (int x = cellX - 1; x <= cellX + 1; x++) {
+                    for (int y = cellY - 1; y <= cellY + 1; y++) {
+                        Cell *adjacentCell = grid->getCell(x, y);
+
+                        if (adjacentCell->occType == FREE)
+                            cell->planType = FRONTIER;
+
+                    }
+                }
+            }
+        }
+    }
 
 
 }
