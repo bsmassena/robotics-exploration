@@ -211,8 +211,10 @@ void Robot::followPotentialField(int t)
     // TODO: define the robot velocities using a control strategy
     //       based on the direction of the gradient of c given by c->dirX[t] and c->dirY[t]
 
-
-
+    float phi = RAD2DEG(atan2(c->dirY[t], c->dirX[t])) - robotAngle;
+    phi = normalizeAngleDEG(phi);
+    angVel = 0.01 * phi;
+    linVel = 0.1;
 
     base.setWheelsVelocity_fromLinAngVelocity(linVel,angVel);
 }
