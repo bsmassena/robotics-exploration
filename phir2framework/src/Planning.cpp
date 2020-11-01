@@ -185,8 +185,6 @@ void Planning::updateCellsTypes()
 
 void Planning::initializePotentials()
 {
-    Cell *c;
-
     // the potential of a cell is stored in:
     // c->pot[i]
     // the preference of a cell is stored in:
@@ -207,19 +205,18 @@ void Planning::initializePotentials()
             // Harmonic fields
             if (cell->occType == OCCUPIED) {
                 cell->pot[0] = 1.0;
-            }
-
-
-            switch (cell->planType) {
-            case FRONTIER:
-            case FRONTIER_NEAR_WALL:
-                c->pot[0] = 0.0;
-                break;
-            case DANGER:
-                c->pot[0] = 1.0;
-                break;
-            default:
-                break;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER:
+                case FRONTIER_NEAR_WALL:
+                    cell->pot[0] = 0.0;
+                    break;
+                case DANGER:
+                    cell->pot[0] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
 
             // With preference
@@ -235,20 +232,35 @@ void Planning::initializePotentials()
 
             if (cell->occType == OCCUPIED) {
                 cell->pot[1] = 1.0;
-                continue;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER:
+                case FRONTIER_NEAR_WALL:
+                    cell->pot[1] = 0.0;
+                    break;
+                case DANGER:
+                    cell->pot[1] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
 
-
-            switch (cell->planType) {
-            case FRONTIER:
-            case FRONTIER_NEAR_WALL:
-                c->pot[1] = 0.0;
-                break;
-            case DANGER:
-                c->pot[1] = 1.0;
-                break;
-            default:
-                break;
+            // Objetivos Dinâmicos
+            if (cell->occType == OCCUPIED) {
+                cell->pot[2] = 1.0;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER_NEAR_WALL:
+                    cell->pot[2] = 0.0;
+                    break;
+                case FRONTIER:
+                case DANGER:
+                    cell->pot[2] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
@@ -256,9 +268,6 @@ void Planning::initializePotentials()
 
 void Planning::iteratePotentials()
 {
-    Cell* c;
-    Cell *left,*right,*up,*down;
-
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
     //     left  = grid->getCell(i-1,j);
@@ -291,6 +300,10 @@ void Planning::iteratePotentials()
                         fabs((grid->getCell(cellX + 1, cellY)->pot[1] - grid->getCell(cellX - 1, cellY)->pot[1]) / 2);
 
                 cell->pot[1] = h - cell->pref / 4 * d;
+
+                // Objetivos Dinâmicos
+                cell->pot[2] = (grid->getCell(cellX - 1, cellY)->pot[2] + grid->getCell(cellX, cellY - 1)->pot[2] +
+                                grid->getCell(cellX + 1, cellY)->pot[2] + grid->getCell(cellX, cellY + 1)->pot[2]) / 4;
             }
         }
     }
@@ -298,8 +311,6 @@ void Planning::iteratePotentials()
 
 void Planning::updateGradient()
 {
-    Cell* c;
-
     // the components of the descent gradient of a cell are stored in:
     // c->dirX[i] and c->dirY[i], for pot[i]
 
