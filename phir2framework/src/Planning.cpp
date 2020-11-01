@@ -207,19 +207,18 @@ void Planning::initializePotentials()
             // Harmonic fields
             if (cell->occType == OCCUPIED) {
                 cell->pot[0] = 1.0;
-            }
-
-
-            switch (cell->planType) {
-            case FRONTIER:
-            case FRONTIER_NEAR_WALL:
-                c->pot[0] = 0.0;
-                break;
-            case DANGER:
-                c->pot[0] = 1.0;
-                break;
-            default:
-                break;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER:
+                case FRONTIER_NEAR_WALL:
+                    c->pot[0] = 0.0;
+                    break;
+                case DANGER:
+                    c->pot[0] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
 
             // With preference
@@ -235,20 +234,35 @@ void Planning::initializePotentials()
 
             if (cell->occType == OCCUPIED) {
                 cell->pot[1] = 1.0;
-                continue;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER:
+                case FRONTIER_NEAR_WALL:
+                    c->pot[1] = 0.0;
+                    break;
+                case DANGER:
+                    c->pot[1] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
 
-
-            switch (cell->planType) {
-            case FRONTIER:
-            case FRONTIER_NEAR_WALL:
-                c->pot[1] = 0.0;
-                break;
-            case DANGER:
-                c->pot[1] = 1.0;
-                break;
-            default:
-                break;
+            // Objetivos Dinâmicos
+            if (cell->occType == OCCUPIED) {
+                cell->pot[2] = 1.0;
+            } else {
+                switch (cell->planType) {
+                case FRONTIER_NEAR_WALL:
+                    c->pot[2] = 0.0;
+                    break;
+                case FRONTIER:
+                case DANGER:
+                    c->pot[2] = 1.0;
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
@@ -291,6 +305,10 @@ void Planning::iteratePotentials()
                         fabs((grid->getCell(cellX + 1, cellY)->pot[1] - grid->getCell(cellX - 1, cellY)->pot[1]) / 2);
 
                 cell->pot[1] = h - cell->pref / 4 * d;
+
+                // Objetivos Dinâmicos
+                cell->pot[2] = (grid->getCell(cellX - 1, cellY)->pot[2] + grid->getCell(cellX, cellY - 1)->pot[2] +
+                                grid->getCell(cellX + 1, cellY)->pot[2] + grid->getCell(cellX, cellY + 1)->pot[2]) / 4;
             }
         }
     }
