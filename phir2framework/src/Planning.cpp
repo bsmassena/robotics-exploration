@@ -200,14 +200,13 @@ void Planning::initializePotentials()
     //                  |                       \                    |
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
-    // Harmonic fields
     for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
         for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
             Cell *cell = grid->getCell(cellX, cellY);
 
+            // Harmonic fields
             if (cell->occType == OCCUPIED) {
                 cell->pot[0] = 1.0;
-                continue;
             }
 
 
@@ -218,6 +217,35 @@ void Planning::initializePotentials()
                 break;
             case DANGER:
                 c->pot[0] = 1.0;
+                break;
+            default:
+                break;
+            }
+
+            // With preference
+            float preference = 0.3;
+
+            if (cell->occType == FREE) {
+                if (cell->planType == NEAR_WALLS) {
+                    cell->pref = preference;
+                } else {
+                    cell->pref = -preference;
+                }
+            }
+
+            if (cell->occType == OCCUPIED) {
+                cell->pot[1] = 1.0;
+                continue;
+            }
+
+
+            switch (cell->planType) {
+            case FRONTIER:
+            case FRONTIER_NEAR_WALL:
+                c->pot[1] = 0.0;
+                break;
+            case DANGER:
+                c->pot[1] = 1.0;
                 break;
             default:
                 break;
@@ -248,18 +276,24 @@ void Planning::iteratePotentials()
     for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
         for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
             Cell *cell = grid->getCell(cellX, cellY);
+            if (cell->occType == FREE) {
 
-            if (cell->occType != FREE) {
-                continue;
+                // Harmonic fields
+                cell->pot[0] = (grid->getCell(cellX - 1, cellY)->pot[0] + grid->getCell(cellX, cellY - 1)->pot[0] +
+                            grid->getCell(cellX + 1, cellY)->pot[0] + grid->getCell(cellX, cellY + 1)->pot[0]) / 4;
+
+
+                // With preference
+                float h = (grid->getCell(cellX - 1, cellY)->pot[1] + grid->getCell(cellX, cellY - 1)->pot[1] +
+                            grid->getCell(cellX + 1, cellY)->pot[1] + grid->getCell(cellX, cellY + 1)->pot[1]) / 4;
+
+                float d = fabs((grid->getCell(cellX, cellY + 1)->pot[1] - grid->getCell(cellX, cellY - 1)->pot[1]) / 2) +
+                        fabs((grid->getCell(cellX + 1, cellY)->pot[1] - grid->getCell(cellX - 1, cellY)->pot[1]) / 2);
+
+                cell->pot[1] = h - cell->pref / 4 * d;
             }
-
-            cell->pot[0] = (grid->getCell(cellX - 1, cellY)->pot[0] + grid->getCell(cellX, cellY - 1)->pot[0] +
-                           grid->getCell(cellX + 1, cellY)->pot[0] + grid->getCell(cellX, cellY + 1)->pot[0]) / 4;
         }
     }
-
-
-
 }
 
 void Planning::updateGradient()
