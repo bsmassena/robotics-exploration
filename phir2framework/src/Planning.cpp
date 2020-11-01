@@ -185,8 +185,6 @@ void Planning::updateCellsTypes()
 
 void Planning::initializePotentials()
 {
-    Cell *c;
-
     // the potential of a cell is stored in:
     // c->pot[i]
     // the preference of a cell is stored in:
@@ -211,10 +209,10 @@ void Planning::initializePotentials()
                 switch (cell->planType) {
                 case FRONTIER:
                 case FRONTIER_NEAR_WALL:
-                    c->pot[0] = 0.0;
+                    cell->pot[0] = 0.0;
                     break;
                 case DANGER:
-                    c->pot[0] = 1.0;
+                    cell->pot[0] = 1.0;
                     break;
                 default:
                     break;
@@ -238,10 +236,10 @@ void Planning::initializePotentials()
                 switch (cell->planType) {
                 case FRONTIER:
                 case FRONTIER_NEAR_WALL:
-                    c->pot[1] = 0.0;
+                    cell->pot[1] = 0.0;
                     break;
                 case DANGER:
-                    c->pot[1] = 1.0;
+                    cell->pot[1] = 1.0;
                     break;
                 default:
                     break;
@@ -254,11 +252,11 @@ void Planning::initializePotentials()
             } else {
                 switch (cell->planType) {
                 case FRONTIER_NEAR_WALL:
-                    c->pot[2] = 0.0;
+                    cell->pot[2] = 0.0;
                     break;
                 case FRONTIER:
                 case DANGER:
-                    c->pot[2] = 1.0;
+                    cell->pot[2] = 1.0;
                     break;
                 default:
                     break;
@@ -270,9 +268,6 @@ void Planning::initializePotentials()
 
 void Planning::iteratePotentials()
 {
-    Cell* c;
-    Cell *left,*right,*up,*down;
-
     // the update of a FREE cell in position (i,j) will use the potential of the four adjacent cells
     // where, for example:
     //     left  = grid->getCell(i-1,j);
@@ -316,8 +311,6 @@ void Planning::iteratePotentials()
 
 void Planning::updateGradient()
 {
-    Cell* c;
-
     // the components of the descent gradient of a cell are stored in:
     // c->dirX[i] and c->dirY[i], for pot[i]
 
