@@ -118,22 +118,45 @@ void Planning::updateCellsTypes()
         for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
             Cell *cell = grid->getCell(cellX, cellY);
 
+            if (cell->himm <= 5) cell->occType = FREE;
+            if (cell->himm >= 10) cell->occType = OCCUPIED;
+        }
+    }
+
+    
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
+
             cell->planType = REGULAR;
 
-            if (cell->himm <= 5) {
-                cell->occType = FREE;
+            if (cell->occType == FREE) {
+                for (int x = cellX - 8; x <= cellX + 8; x++) {
+                    for (int y = cellY - 8; y <= cellY + 8; y++) {
+                        Cell *adjacentCell = grid->getCell(x, y);
+
+                        if (adjacentCell->occType == OCCUPIED)
+                            cell->planType = NEAR_WALLS;
+                    }
+                }
+            }
+
+            if (cell->occType == FREE) {
                 for (int x = cellX - 3; x <= cellX + 3; x++) {
                     for (int y = cellY - 3; y <= cellY + 3; y++) {
                         Cell *adjacentCell = grid->getCell(x, y);
 
                         if (adjacentCell->occType == OCCUPIED)
                             cell->planType = DANGER;
-
                     }
                 }
             }
+        }
+    }
 
-            if (cell->himm >= 10) cell->occType = OCCUPIED;
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
 
             if (cell->occType == UNEXPLORED) {
                 for (int x = cellX - 1; x <= cellX + 1; x++) {
@@ -145,10 +168,18 @@ void Planning::updateCellsTypes()
 
                     }
                 }
+
+                for (int x = cellX - 1; x <= cellX + 1; x++) {
+                    for (int y = cellY - 1; y <= cellY + 1; y++) {
+                        Cell *adjacentCell = grid->getCell(x, y);
+
+                        if (adjacentCell->planType == DANGER || adjacentCell->planType == NEAR_WALLS)
+                            cell->planType = FRONTIER_NEAR_WALL;
+                    }
+                }
             }
         }
     }
-
 
 }
 
