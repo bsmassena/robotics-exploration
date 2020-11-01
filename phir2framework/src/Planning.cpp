@@ -200,9 +200,30 @@ void Planning::initializePotentials()
     //                  |                       \                    |
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
+    // Harmonic fields
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
+
+            if (cell->occType == OCCUPIED) {
+                cell->pot[0] = 1.0;
+                continue;
+            }
 
 
-
+            switch (cell->planType) {
+            case FRONTIER:
+            case FRONTIER_NEAR_WALL:
+                c->pot[0] = 0.0;
+                break;
+            case DANGER:
+                c->pot[0] = 1.0;
+                break;
+            default:
+                break;
+            }
+        }
+    }
 }
 
 void Planning::iteratePotentials()
@@ -223,7 +244,19 @@ void Planning::iteratePotentials()
     //                  |                       \                    |
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
+    // Harmonic
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
 
+            if (cell->occType != FREE) {
+                continue;
+            }
+
+            cell->pot[0] = (grid->getCell(cellX - 1, cellY)->pot[0] + grid->getCell(cellX, cellY - 1)->pot[0] +
+                           grid->getCell(cellX + 1, cellY)->pot[0] + grid->getCell(cellX, cellY + 1)->pot[0]) / 4;
+        }
+    }
 
 
 
@@ -252,10 +285,24 @@ void Planning::updateGradient()
     //  (gridLimits.minX, gridLimits.minY)  -------  (gridLimits.maxX, gridLimits.minY)
 
 
+    // Harmonic
+    for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
+        for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
+            Cell *cell = grid->getCell(cellX, cellY);
 
+            if (cell->occType != FREE) {
+                continue;
+            }
 
+            cell->dirX[0] = -(grid->getCell(cellX + 1, cellY)->pot[0] - grid->getCell(cellX - 1, cellY)->pot[0]) / 2;
+            cell->dirY[0] = -(grid->getCell(cellX, cellY + 1)->pot[0] - grid->getCell(cellX, cellY - 1)->pot[0]) / 2;
 
-
-
+            float norm = sqrt(pow(cell->dirX[0], 2) + pow(cell->dirY[0], 2));
+            if (norm != 0) {
+                cell->dirX[0] /= norm;
+                cell->dirY[0] /= norm;
+            }
+        }
+    }
 }
 
