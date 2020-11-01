@@ -288,19 +288,23 @@ void Planning::updateGradient()
     // Harmonic
     for (int cellX = gridLimits.minX; cellX <= gridLimits.maxX; cellX++) {
         for (int cellY = gridLimits.minY; cellY <= gridLimits.maxY; cellY++) {
-            Cell *cell = grid->getCell(cellX, cellY);
+            for (int i = 0; i <= 2; i++) {
+                Cell *cell = grid->getCell(cellX, cellY);
 
-            if (cell->occType != FREE) {
-                continue;
-            }
+                if (cell->occType != FREE) {
+                    cell->dirX[i] = 0;
+                    cell->dirY[i] = 0;
+                    continue;
+                }
 
-            cell->dirX[0] = -(grid->getCell(cellX + 1, cellY)->pot[0] - grid->getCell(cellX - 1, cellY)->pot[0]) / 2;
-            cell->dirY[0] = -(grid->getCell(cellX, cellY + 1)->pot[0] - grid->getCell(cellX, cellY - 1)->pot[0]) / 2;
+                cell->dirX[i] = -(grid->getCell(cellX + 1, cellY)->pot[i] - grid->getCell(cellX - 1, cellY)->pot[i]) / 2;
+                cell->dirY[i] = -(grid->getCell(cellX, cellY + 1)->pot[i] - grid->getCell(cellX, cellY - 1)->pot[i]) / 2;
 
-            float norm = sqrt(pow(cell->dirX[0], 2) + pow(cell->dirY[0], 2));
-            if (norm != 0) {
-                cell->dirX[0] /= norm;
-                cell->dirY[0] /= norm;
+                float norm = sqrt(pow(cell->dirX[i], 2) + pow(cell->dirY[i], 2));
+                if (norm != 0) {
+                    cell->dirX[i] /= norm;
+                    cell->dirY[i] /= norm;
+                }
             }
         }
     }
